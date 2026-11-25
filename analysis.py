@@ -67,8 +67,8 @@ def analyze_color_groups(df):
 
 
 def calculate_group_investment(properties, color_group, houses, landing_counts):
-    if type(houses) is not int or not 0 <= houses <= 4:
-        raise ValueError("Houses must be an integer between 0 and 4")
+    if type(houses) is not int or not 0 <= houses <= 5:
+        raise ValueError("Houses must be an integer between 0 and 5")
 
     purchase_cost = 0
     development_cost = 0
@@ -114,7 +114,7 @@ def calculate_group_investment(properties, color_group, houses, landing_counts):
 
 def compare_development_levels(properties, color_group, landing_counts):
     results = []
-    for houses in range(5):
+    for houses in range(6):
         investment = calculate_group_investment(properties, color_group, houses, landing_counts)
         results.append({
             "Houses": houses, 

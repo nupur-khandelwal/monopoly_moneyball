@@ -72,5 +72,40 @@ budget = 1500
 
 optimized = optimize_budget(all_strategies, budget)
 
-print(f"\nBEST STRATEGIES WITH A ${budget} BUDGET")
-print(optimized.head(5).to_string(index=False))
+# print(calculate_group_investment(
+#     properties,
+#     "Orange",
+#     5,
+#     results["landing_counts"]
+# ))
+
+from optimization import prepare_strategies
+
+grouped = prepare_strategies(all_strategies)
+
+from optimization import optimize_portfolio
+
+budgets = [0, 100, 120, 500, 620, 1000, 1500, 
+           2000, 3000, 5000, 10000, 100000]
+
+for budget in budgets:
+    dp = optimize_portfolio(grouped, budget)
+
+    best_cost = max(dp, key=lambda cost: dp[cost]["rent"])
+    best_state = dp[best_cost]
+
+        # Verify that the portfolio is affordable
+    assert best_cost <= budget
+
+    # Verify that the portfolio cost matches the DP state
+    assert sum(s["cost"] for s in best_state["portfolio"]) == best_cost
+
+    # Verify that no color group appears twice
+    groups = [s["color_group"] for s in best_state["portfolio"]]
+    assert len(groups) == len(set(groups))
+
+    # Verify that expected rent matches the DP state
+    assert abs(
+        sum(s["rent"] for s in best_state["portfolio"])
+        - best_state["rent"]
+    ) < 1e-9
