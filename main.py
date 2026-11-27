@@ -81,31 +81,71 @@ optimized = optimize_budget(all_strategies, budget)
 
 from optimization import prepare_strategies
 
-grouped = prepare_strategies(all_strategies)
+grouped = prepare_strategies(all_strategies, properties)
 
 from optimization import optimize_portfolio
+scenarios = [
+    (3000, 32, 12),
+    (3000, 0, 12),
+    (3000, 32, 0),
+    (3000, 0, 0),
+    (3000, 6, 3),
+    (0, 32, 12),
+    (10000, 32, 12),
+    (100000, 32, 12)
+]
 
-budgets = [0, 100, 120, 500, 620, 1000, 1500, 
-           2000, 3000, 5000, 10000, 100000]
+for budget, max_houses, max_hotels in scenarios:
 
-for budget in budgets:
-    dp = optimize_portfolio(grouped, budget)
+    dp = optimize_portfolio(
+        grouped,
+        budget,
+        max_houses,
+        max_hotels
+    )
 
-    best_cost = max(dp, key=lambda cost: dp[cost]["rent"])
-    best_state = dp[best_cost]
+    best_key = max(dp, key=lambda key: dp[key]["rent"])
+    best_state = dp[best_key]
 
-        # Verify that the portfolio is affordable
-    assert best_cost <= budget
+    cost, houses_used, hotels_used = best_key
 
-    # Verify that the portfolio cost matches the DP state
-    assert sum(s["cost"] for s in best_state["portfolio"]) == best_cost
+    print(f"\nBudget: ${budget}")
+    print(f"House limit: {max_houses}")
+    print(f"Hotel limit: {max_hotels}")
 
-    # Verify that no color group appears twice
-    groups = [s["color_group"] for s in best_state["portfolio"]]
-    assert len(groups) == len(set(groups))
+    print(f"Investment: ${cost}")
+    print(f"Expected rent: ${best_state['rent']:.4f}")
+    print(f"Houses used: {houses_used}")
+    print(f"Hotels used: {hotels_used}")
 
-    # Verify that expected rent matches the DP state
-    assert abs(
-        sum(s["rent"] for s in best_state["portfolio"])
-        - best_state["rent"]
-    ) < 1e-9
+    for strategy in best_state["portfolio"]:
+        print(strategy)
+        portfolio = best_state["portfolio"]
+
+        # Verify resource constraints
+        assert cost <= budget
+        assert houses_used <= max_houses
+        assert hotels_used <= max_hotels
+
+        # Verify portfolio totals
+        assert sum(s["cost"] for s in portfolio) == cost
+
+        assert sum(
+            s["houses_required"] for s in portfolio
+        ) == houses_used
+
+        assert sum(
+            s["hotels_required"] for s in portfolio
+        ) == hotels_used
+
+        # Verify unique color groups
+        groups = [s["color_group"] for s in portfolio]
+        assert len(groups) == len(set(groups))
+
+        # Verify expected rent
+        assert abs(
+            sum(s["rent"] for s in portfolio)
+            - best_state["rent"]
+        ) < 1e-9
+
+print(f"\nAll {len(scenarios) * 8} checks passed!")
